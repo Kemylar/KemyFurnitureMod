@@ -1,60 +1,142 @@
-﻿using UnityEngine;
-using KemyFurniture.Items.ScrollShelf;
+﻿using System;
+using UnityEngine;
 using KemyFurniture.Items.Cabinet;
-using KemyFurniture.Items.SeaChest;
-using KemyFurniture.Items.Bed;
 using KemyFurniture.Items.Carpet;
-using KemyFurniture.Items.NavigatorDesk;
+using KemyFurniture.Items.ScrollShelf;
+using KemyFurniture.Items.SeaChest;
 
 namespace KemyFurniture.Core
 {
     public static class ItemSetup
     {
-        public static void RegisterSaveIndex(GameObject prefab, int fallbackIndex)
+        public static void RegisterSaveIndex(GameObject prefab, int saveIndex)
         {
             if (prefab == null) return;
 
-            SaveablePrefab saveComp = prefab.GetComponent<SaveablePrefab>();
-            if (saveComp != null)
-            {
-                if (saveComp.prefabIndex == 0) saveComp.prefabIndex = fallbackIndex;
-            }
-            else
-            {
-                FurniturePlugin.DiagLogger.LogError($"[KEMY FURNITURE] Missing SaveablePrefab on {prefab.name}!");
-            }
-
-            // Dynamically ensure logic components are present
-            EnsureLogicComponents(prefab);
+            var saveable = prefab.GetComponent<SaveablePrefab>() ?? prefab.AddComponent<SaveablePrefab>();
+            saveable.prefabIndex = saveIndex;
         }
 
-        private static void EnsureLogicComponents(GameObject prefab)
+        public static void ConfigurePrefabProperties(GameObject prefab)
         {
-            string name = prefab.name.ToLower();
+            if (prefab == null) return;
 
-            if (name.Contains("shelf") && prefab.GetComponent<ScrollShelfLogic>() == null)
+            string name = prefab.name.ToLower();
+            var shipItem = prefab.GetComponent<ShipItem>();
+
+            // 1. Small Cabinet (Nightstand)
+            if (name.Contains("cabinetsmall"))
             {
-                prefab.AddComponent<ScrollShelfLogic>();
+                EnsureCrateComponents(prefab);
+                if (shipItem != null)
+                {
+                    shipItem.name = "CabinetSmall";
+                    shipItem.lookText = "Nightstand";
+                }
+                if (prefab.GetComponent<CabinetSmallLogic>() == null)
+                {
+                    prefab.AddComponent<CabinetSmallLogic>();
+                }
+                SetItemValue(prefab, 480);
             }
-            else if (name.Contains("cabinet") && prefab.GetComponent<CabinetLogic>() == null)
+            // 2. Wide Cabinet (Dresser)
+            else if (name.Contains("cabinetwide"))
             {
-                prefab.AddComponent<CabinetLogic>();
+                EnsureCrateComponents(prefab);
+                if (shipItem != null)
+                {
+                    shipItem.name = "CabinetWide";
+                    shipItem.lookText = "Dresser";
+                }
+                if (prefab.GetComponent<CabinetWideLogic>() == null)
+                {
+                    prefab.AddComponent<CabinetWideLogic>();
+                }
+                SetItemValue(prefab, 720);
             }
-            else if (name.Contains("chest") && prefab.GetComponent<SeaChestLogic>() == null)
+            // 3. Tall Cabinet (Original)
+            else if (name.Contains("cabinet"))
             {
-                prefab.AddComponent<SeaChestLogic>();
+                EnsureCrateComponents(prefab);
+                if (shipItem != null)
+                {
+                    shipItem.name = "Cabinet";
+                    shipItem.lookText = "Cabinet";
+                }
+                if (prefab.GetComponent<CabinetLogic>() == null)
+                {
+                    prefab.AddComponent<CabinetLogic>();
+                }
+                SetItemValue(prefab, 1200);
             }
-            else if (name.Contains("bed") && prefab.GetComponent<BedLogic>() == null)
+            // 4. Sea Chest
+            else if (name.Contains("chest") || name.Contains("seachest"))
             {
-                prefab.AddComponent<BedLogic>();
+                EnsureCrateComponents(prefab);
+                if (shipItem != null)
+                {
+                    shipItem.name = "SeaChest";
+                    shipItem.lookText = "Sea Chest";
+                }
+                if (prefab.GetComponent<SeaChestLogic>() == null)
+                {
+                    prefab.AddComponent<SeaChestLogic>();
+                }
+                SetItemValue(prefab, 800);
             }
-            else if (name.Contains("carpet") && prefab.GetComponent<CarpetLogic>() == null)
+            // 5. Scroll Shelf
+            else if (name.Contains("scroll") || name.Contains("shelf"))
             {
-                prefab.AddComponent<CarpetLogic>();
+                EnsureCrateComponents(prefab);
+                if (shipItem != null)
+                {
+                    shipItem.name = "ScrollShelf";
+                    shipItem.lookText = "Scroll Shelf";
+                }
+                if (prefab.GetComponent<ScrollShelfLogic>() == null)
+                {
+                    prefab.AddComponent<ScrollShelfLogic>();
+                }
+                SetItemValue(prefab, 450);
             }
-            else if ((name.Contains("desk") || name.Contains("table") || name.Contains("navigator")) && prefab.GetComponent<NavigatorDeskLogic>() == null)
+            // 6. Carpets
+            else if (name.Contains("carpet"))
             {
-                prefab.AddComponent<NavigatorDeskLogic>();
+                if (prefab.GetComponent<CarpetLogic>() == null)
+                {
+                    prefab.AddComponent<CarpetLogic>();
+                }
+                SetItemValue(prefab, 400);
+            }
+            // 7. Navigator's Drafting Table
+            else if (name.Contains("navigatortable") || name.Contains("table"))
+            {
+                SetItemValue(prefab, 650);
+            }
+            // 8. Bunk Bed
+            else if (name.Contains("bed"))
+            {
+                SetItemValue(prefab, 950);
+            }
+        }
+
+        private static void EnsureCrateComponents(GameObject prefab)
+        {
+            if (prefab.GetComponent<CrateInventory>() == null)
+            {
+                prefab.AddComponent<CrateInventory>();
+            }
+
+            var btn = prefab.GetComponent<GoPointerButton>() ?? prefab.AddComponent<GoPointerButton>();
+            btn.enabled = true;
+        }
+
+        private static void SetItemValue(GameObject prefab, int value)
+        {
+            var shipItem = prefab.GetComponent<ShipItem>();
+            if (shipItem != null)
+            {
+                shipItem.value = value;
             }
         }
     }
