@@ -4,45 +4,78 @@ using UnityEngine;
 
 namespace KemyFurniture.Core
 {
-    // 1. GLOBAL PREFAB DIRECTORY INJECTION
+    // 1. PREVENT TOGGLECOLLIDER CRASHES
+    [HarmonyPatch(typeof(ItemRigidbody), "ToggleCollider")]
+    public static class ItemRigidbodyNREGuard
+    {
+        [HarmonyFinalizer]
+        public static Exception Finalizer(Exception __exception) => null;
+    }
+
+    // 2. PREVENT UPDATEMASS NRE ON RESTOCK
+    [HarmonyPatch(typeof(ItemRigidbody), "UpdateMass")]
+    public static class ItemRigidbodyMassGuard
+    {
+        [HarmonyFinalizer]
+        public static Exception Finalizer(Exception __exception) => null;
+    }
+
+    // 3. PREVENT SHIPITEMCRATE ONLOAD NRE ON EMPTY FURNITURE RESTOCK
+    [HarmonyPatch(typeof(ShipItemCrate), "OnLoad")]
+    public static class ShipItemCrateOnLoadGuard
+    {
+        [HarmonyFinalizer]
+        public static Exception Finalizer(Exception __exception) => null;
+    }
+
+    // 4. PRICE ENFORCEMENT
+    [HarmonyPatch(typeof(ShipItem), "Awake")]
+    public static class FurniturePriceAwakePatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(ShipItem __instance) => ApplyEnforcedPrice(__instance);
+
+        public static void ApplyEnforcedPrice(ShipItem item)
+        {
+            if (item == null) return;
+            string name = item.gameObject.name.ToLower();
+
+            if (name.StartsWith("cabinetsmall")) item.value = 480;
+            else if (name.StartsWith("cabinetwide")) item.value = 720;
+            else if (name.StartsWith("cabinet")) item.value = 1200;
+            else if (name.Contains("chest") || name.Contains("seachest")) item.value = 800;
+            else if (name.Contains("scroll") || name.Contains("shelf")) item.value = 450;
+            else if (name.Contains("carpet")) item.value = 400;
+            else if (name.Contains("navigatortable") || name.Contains("table")) item.value = 650;
+            else if (name.Contains("bed")) item.value = 950;
+        }
+    }
+
+    [HarmonyPatch(typeof(ShipItem), "Update")]
+    public static class FurniturePriceUpdatePatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(ShipItem __instance)
+        {
+            if (!__instance.sold)
+            {
+                FurniturePriceAwakePatch.ApplyEnforcedPrice(__instance);
+            }
+        }
+    }
+
+    // 5. GLOBAL PREFAB DIRECTORY INJECTION
     [HarmonyPatch(typeof(PrefabsDirectory), "PopulateShipItems")]
     public static class FurnitureDirectoryInjectionPatch
     {
         [HarmonyPrefix]
         public static void Prefix()
         {
-            var prefabs = FurniturePlugin.LoadedPrefabs;
-            if (prefabs == null || prefabs.Length == 0) return;
-
-            try
-            {
-                foreach (var prefab in prefabs)
-                {
-                    if (prefab == null) continue;
-
-                    SaveablePrefab saveComp = prefab.GetComponent<SaveablePrefab>();
-                    if (saveComp == null) continue;
-
-                    int index = saveComp.prefabIndex;
-
-                    // Dynamically resize directory if index is larger than current capacity
-                    if (PrefabsDirectory.instance.directory.Length <= index)
-                    {
-                        Array.Resize(ref PrefabsDirectory.instance.directory, index + 1);
-                    }
-
-                    PrefabsDirectory.instance.directory[index] = prefab;
-                    FurniturePlugin.DiagLogger.LogInfo($"[KEMY FURNITURE] {prefab.name} registered cleanly at slot {index}");
-                }
-            }
-            catch (Exception ex)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] Critical Failure during directory injection: " + ex);
-            }
+            FurniturePlugin.ForceDirectDirectoryInjection();
         }
     }
 
-    // 2. INTERCEPT LOOK UI PROMPTS
+    // 6. INTERCEPT LOOK UI PROMPTS
     [HarmonyPatch(typeof(LookUI), nameof(LookUI.ShowLookText))]
     public static class LookUIShowTextInjectionPatch
     {
@@ -72,7 +105,11 @@ namespace KemyFurniture.Core
                 var extraTextField = AccessTools.Field(typeof(LookUI), "extraText").GetValue(__instance);
                 var controlsTextField = AccessTools.Field(typeof(LookUI), "controlsText").GetValue(__instance);
 
-                if (extraTextField != null) AccessTools.Property(extraTextField.GetType(), "text").SetValue(extraTextField, component.lookText);
+                if (extraTextField != null)
+                {
+                    string displayName = string.IsNullOrEmpty(component.lookText) ? component.name : component.lookText;
+                    AccessTools.Property(extraTextField.GetType(), "text").SetValue(extraTextField, displayName);
+                }
 
                 if (controlsTextField != null)
                 {
@@ -97,13 +134,14 @@ namespace KemyFurniture.Core
         }
     }
 
-    // 3. INTERCEPT INTERACTION (ALT-ACTIVATE)
+    // 7. INTERCEPT INTERACTION (ALT-ACTIVATE)
     [HarmonyPatch(typeof(ShipItem), nameof(ShipItem.OnAltActivate), new Type[0])]
     public static class ShipItemAltActivationPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(ShipItem __instance)
         {
+            // If unsold, hand off directly to vanilla purchase logic
             if (!__instance.sold) return true;
 
             var customLogic = __instance.GetComponent<ICustomFurnitureLogic>();
@@ -111,7 +149,7 @@ namespace KemyFurniture.Core
         }
     }
 
-    // 4. INTERCEPT RECTANGULAR STORAGE GRID DIMENSIONS
+    // 8. INTERCEPT RECTANGULAR STORAGE GRID DIMENSIONS
     [HarmonyPatch(typeof(CrateInventoryUI), "GetCrateDimensions")]
     public static class CrateInventoryUIOverridePatch
     {
