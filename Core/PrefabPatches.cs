@@ -40,9 +40,9 @@ namespace KemyFurniture.Core
             if (item == null) return;
             string name = item.gameObject.name.ToLower();
 
-            if (name.StartsWith("cabinetsmall")) item.value = 480;
-            else if (name.StartsWith("cabinetwide")) item.value = 720;
-            else if (name.StartsWith("cabinet")) item.value = 1200;
+            if (name.Contains("cabinetsmall")) item.value = 480;
+            else if (name.Contains("cabinetwide")) item.value = 720;
+            else if (name.Contains("cabinet")) item.value = 1200;
             else if (name.Contains("chest") || name.Contains("seachest")) item.value = 800;
             else if (name.Contains("scroll") || name.Contains("shelf")) item.value = 450;
             else if (name.Contains("carpet")) item.value = 400;

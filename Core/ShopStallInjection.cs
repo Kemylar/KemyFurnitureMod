@@ -76,7 +76,7 @@ namespace KemyFurniture
                 Vector3 shopAreaPos = new Vector3(1533.948f, 5.537f, -370.439f);
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 235.1f, 0.0f);
 
-                Vector3 shopAreaSize = new Vector3(11.42f, 16.74f, 8.5f);
+                Vector3 shopAreaSize = new Vector3(14.0f, 18.0f, 10.0f); // Expanded bounds to guarantee coverage
 
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
@@ -92,45 +92,54 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
-                Func<string, GameObject> getPrefab = (name) =>
-                    FurniturePlugin.LoadedPrefabs.FirstOrDefault(p => p != null && p.name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                // Fuzzy prefab finder to prevent silent name-casing mismatches
+                Func<string, GameObject> getPrefab = (targetName) =>
+                {
+                    if (FurniturePlugin.LoadedPrefabs == null) return null;
+                    string cleanTarget = targetName.Replace(" ", "").Replace("_", "").ToLower();
+                    return FurniturePlugin.LoadedPrefabs.FirstOrDefault(p =>
+                        p != null && p.name.Replace(" ", "").Replace("_", "").ToLower().Contains(cleanTarget));
+                };
 
-                GameObject cabinetPrefab = getPrefab("Cabinet") ?? FurniturePlugin.LoadedPrefabs[0];
-                GameObject cabinetSmallPrefab = getPrefab("CabinetSmall") ?? cabinetPrefab;
-                GameObject cabinetWidePrefab = getPrefab("CabinetWide") ?? cabinetPrefab;
-                GameObject bedPrefab = getPrefab("Bed") ?? FurniturePlugin.LoadedPrefabs[1];
-                GameObject chestPrefab = getPrefab("SeaChest") ?? FurniturePlugin.LoadedPrefabs[2];
-                GameObject carpetPrefab = getPrefab("Carpet") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(4) ?? chestPrefab;
+                // Regional Al'Ankh Prefabs
+                GameObject cabinetAlAnkhPrefab = getPrefab("CabinetAlAnkh") ?? getPrefab("Cabinet");
+                GameObject cabinetWideAlAnkhPrefab = getPrefab("CabinetWideAlAnkh") ?? getPrefab("CabinetWide");
+                GameObject cabinetSmallAlAnkhPrefab = getPrefab("CabinetSmallAlAnkh") ?? getPrefab("CabinetSmall");
+                GameObject chestAlAnkhPrefab = getPrefab("ChestAlAnkh") ?? getPrefab("SeaChest");
+                GameObject bedAlAnkhPrefab = getPrefab("BedAlAnkh") ?? getPrefab("Bed");
+                GameObject scrollShelfAlAnkhPrefab = getPrefab("ScrollShelfAlAnkh") ?? getPrefab("ScrollShelf");
+
+                // Standard stock items
+                GameObject carpetPrefab = getPrefab("Carpet");
                 GameObject carpetBluePrefab = getPrefab("CarpetBlue") ?? carpetPrefab;
                 GameObject carpetGreenPrefab = getPrefab("CarpetGreen") ?? carpetPrefab;
-                GameObject scrollShelfPrefab = getPrefab("ScrollShelf") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(1) ?? chestPrefab;
-                GameObject navigatorTablePrefab = getPrefab("NavigatorTable") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(0) ?? chestPrefab;
+                GameObject navigatorTablePrefab = getPrefab("NavigatorTable");
 
                 Transform parent = sceneryRoot.transform;
 
-                // 1. Single Tall Cabinet
-                CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.641f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetPrefab);
+                // 1. Single Tall Cabinet (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.641f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetAlAnkhPrefab);
 
-                // 2. Wide Cabinet (Dresser)
-                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.550f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWidePrefab);
+                // 2. Wide Cabinet / Dresser (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.550f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWideAlAnkhPrefab);
 
-                // 3. Small Cabinet (Nightstand)
-                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.550f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallPrefab);
+                // 3. Small Cabinet / Nightstand (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.550f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallAlAnkhPrefab);
 
                 // 4. Navigator's Table
                 CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1526.130f, 5.548f, -374.435f), Quaternion.Euler(270.0f, 236.1f, 0.0f), navigatorTablePrefab);
 
-                // 5. Bunk Beds
-                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 5.914f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.547f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedPrefab);
+                // 5. Bunk Beds (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 5.914f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.547f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
 
-                // 6. Sea Chests
-                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1532.814f, 6.313f, -368.393f), Quaternion.Euler(0.0f, 145.3f, 0.0f), chestPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Upper", new Vector3(1532.791f, 7.875f, -368.338f), Quaternion.Euler(0.0f, 146.8f, 0.0f), chestPrefab);
+                // 6. Sea Chests (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1532.814f, 6.313f, -368.393f), Quaternion.Euler(0.0f, 145.3f, 0.0f), chestAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Upper", new Vector3(1532.791f, 7.875f, -368.338f), Quaternion.Euler(0.0f, 146.8f, 0.0f), chestAlAnkhPrefab);
 
-                // 7. Scroll Shelves
-                CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_1", new Vector3(1534.890f, 6.398f, -369.552f), Quaternion.Euler(0.0f, 326.4f, 180.0f), scrollShelfPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_2", new Vector3(1533.572f, 6.398f, -370.359f), Quaternion.Euler(0.0f, 324.7f, 180.0f), scrollShelfPrefab);
+                // 7. Scroll Shelves (Al'Ankh)
+                CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_1", new Vector3(1534.890f, 6.398f, -369.552f), Quaternion.Euler(0.0f, 326.4f, 180.0f), scrollShelfAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_2", new Vector3(1533.572f, 6.398f, -370.359f), Quaternion.Euler(0.0f, 324.7f, 180.0f), scrollShelfAlAnkhPrefab);
 
                 // 8. Carpets
                 CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Red", new Vector3(1535.796f, 5.577f, -372.323f), Quaternion.Euler(90.0f, 145.9f, 0.0f), carpetPrefab);
@@ -216,7 +225,7 @@ namespace KemyFurniture
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_1", new Vector3(-110.891f, 2.155f, -538.721f), Quaternion.Euler(0.3f, 45.1f, 359.8f), cabinetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_2", new Vector3(-110.328f, 2.149f, -538.106f), Quaternion.Euler(0.0f, 43.3f, 0.1f), cabinetPrefab);
 
-                // Small Cabinet (Nightstand) - Updated Position & Rotation
+                // Small Cabinet (Nightstand)
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetSmall", new Vector3(-114.238f, 3.118f, -534.576f), Quaternion.Euler(0.0f, 44.3f, 0.0f), cabinetSmallPrefab);
 
                 // Wide Cabinet (Dresser)

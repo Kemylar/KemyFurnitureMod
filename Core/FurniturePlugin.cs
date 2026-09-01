@@ -14,7 +14,7 @@ namespace KemyFurniture
     {
         public const string PLUGIN_GUID = "com.kemy.kemyfurniture";
         public const string PLUGIN_NAME = "Kemy's Furniture";
-        public const string PLUGIN_VERSION = "1.2.0";
+        public const string PLUGIN_VERSION = "1.3.0";
 
         public static AssetBundle MainAssetBundle { get; private set; }
         public static GameObject[] LoadedPrefabs { get; private set; }
