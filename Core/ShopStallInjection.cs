@@ -9,19 +9,12 @@ namespace KemyFurniture
 {
     public static class ShopStallInjection
     {
-        private static bool grcShopSpawned = false;
-        private static bool dcShopSpawned = false;
-        private static bool faShopSpawned = false;
-
         public static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             string sceneName = scene.name.ToLower();
 
             if (sceneName.Contains("main menu"))
             {
-                grcShopSpawned = false;
-                dcShopSpawned = false;
-                faShopSpawned = false;
                 return;
             }
 
@@ -50,20 +43,34 @@ namespace KemyFurniture
             return runner.GetComponent<CoroutineRunner>() ?? runner.AddComponent<CoroutineRunner>();
         }
 
+        // Prioritizes exact matches to prevent "Cabinet" from matching "CabinetSmall" or "CabinetAlAnkh"
+        private static GameObject ResolvePrefab(string targetName)
+        {
+            if (FurniturePlugin.LoadedPrefabs == null || FurniturePlugin.LoadedPrefabs.Length == 0) return null;
+            string cleanTarget = targetName.Replace(" ", "").Replace("_", "").ToLower();
+
+            // 1. Exact match pass
+            GameObject exact = FurniturePlugin.LoadedPrefabs.FirstOrDefault(p =>
+                p != null && p.name.Replace(" ", "").Replace("_", "").ToLower().Equals(cleanTarget, StringComparison.OrdinalIgnoreCase));
+
+            if (exact != null) return exact;
+
+            // 2. Substring fallback
+            return FurniturePlugin.LoadedPrefabs.FirstOrDefault(p =>
+                p != null && p.name.Replace(" ", "").Replace("_", "").ToLower().Contains(cleanTarget));
+        }
+
         // =========================================================================
         // 1. GOLD ROCK CITY SHOP SETUP
         // =========================================================================
         private static IEnumerator SpawnGoldRockShopRoutine()
         {
-            yield return new WaitForSeconds(3f);
-            if (grcShopSpawned) yield break;
+            yield return new WaitForSeconds(2.5f);
 
             var sceneryRoot = GameObject.Find("island 1 A (gold rock) scenery");
-            if (sceneryRoot == null)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] GRC Scenery root not found!");
-                yield break;
-            }
+            if (sceneryRoot == null) yield break;
+
+            if (sceneryRoot.transform.Find("Kemy_GRC_Custom_ShopArea") != null) yield break;
 
             try
             {
@@ -75,11 +82,11 @@ namespace KemyFurniture
 
                 Vector3 shopAreaPos = new Vector3(1533.948f, 5.537f, -370.439f);
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 235.1f, 0.0f);
-
-                Vector3 shopAreaSize = new Vector3(14.0f, 18.0f, 10.0f); // Expanded bounds to guarantee coverage
+                Vector3 shopAreaSize = new Vector3(14.0f, 18.0f, 10.0f);
 
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
+                    prefix: "GRC",
                     templateStallName: "market_stall (8)",
                     templateShopAreaName: "shop",
                     templateShopkeeperName: "shopkeeper (6)",
@@ -92,62 +99,36 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
-                // Fuzzy prefab finder to prevent silent name-casing mismatches
-                Func<string, GameObject> getPrefab = (targetName) =>
-                {
-                    if (FurniturePlugin.LoadedPrefabs == null) return null;
-                    string cleanTarget = targetName.Replace(" ", "").Replace("_", "").ToLower();
-                    return FurniturePlugin.LoadedPrefabs.FirstOrDefault(p =>
-                        p != null && p.name.Replace(" ", "").Replace("_", "").ToLower().Contains(cleanTarget));
-                };
+                GameObject cabinetAlAnkhPrefab = ResolvePrefab("CabinetAlAnkh") ?? ResolvePrefab("Cabinet");
+                GameObject cabinetWideAlAnkhPrefab = ResolvePrefab("CabinetWideAlAnkh") ?? ResolvePrefab("CabinetWide");
+                GameObject cabinetSmallAlAnkhPrefab = ResolvePrefab("CabinetSmallAlAnkh") ?? ResolvePrefab("CabinetSmall");
+                GameObject chestAlAnkhPrefab = ResolvePrefab("ChestAlAnkh") ?? ResolvePrefab("SeaChest");
+                GameObject bedAlAnkhPrefab = ResolvePrefab("BedAlAnkh") ?? ResolvePrefab("Bed");
+                GameObject scrollShelfAlAnkhPrefab = ResolvePrefab("ScrollShelfAlAnkh") ?? ResolvePrefab("ScrollShelf");
 
-                // Regional Al'Ankh Prefabs
-                GameObject cabinetAlAnkhPrefab = getPrefab("CabinetAlAnkh") ?? getPrefab("Cabinet");
-                GameObject cabinetWideAlAnkhPrefab = getPrefab("CabinetWideAlAnkh") ?? getPrefab("CabinetWide");
-                GameObject cabinetSmallAlAnkhPrefab = getPrefab("CabinetSmallAlAnkh") ?? getPrefab("CabinetSmall");
-                GameObject chestAlAnkhPrefab = getPrefab("ChestAlAnkh") ?? getPrefab("SeaChest");
-                GameObject bedAlAnkhPrefab = getPrefab("BedAlAnkh") ?? getPrefab("Bed");
-                GameObject scrollShelfAlAnkhPrefab = getPrefab("ScrollShelfAlAnkh") ?? getPrefab("ScrollShelf");
-
-                // Standard stock items
-                GameObject carpetPrefab = getPrefab("Carpet");
-                GameObject carpetBluePrefab = getPrefab("CarpetBlue") ?? carpetPrefab;
-                GameObject carpetGreenPrefab = getPrefab("CarpetGreen") ?? carpetPrefab;
-                GameObject navigatorTablePrefab = getPrefab("NavigatorTable");
+                GameObject carpetPrefab = ResolvePrefab("Carpet");
+                GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
+                GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
+                GameObject navigatorTablePrefab = ResolvePrefab("NavigatorTable");
 
                 Transform parent = sceneryRoot.transform;
 
-                // 1. Single Tall Cabinet (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.641f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetAlAnkhPrefab);
-
-                // 2. Wide Cabinet / Dresser (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.550f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWideAlAnkhPrefab);
-
-                // 3. Small Cabinet / Nightstand (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.550f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallAlAnkhPrefab);
-
-                // 4. Navigator's Table
                 CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1526.130f, 5.548f, -374.435f), Quaternion.Euler(270.0f, 236.1f, 0.0f), navigatorTablePrefab);
-
-                // 5. Bunk Beds (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 5.914f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.547f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
-
-                // 6. Sea Chests (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1532.814f, 6.313f, -368.393f), Quaternion.Euler(0.0f, 145.3f, 0.0f), chestAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Upper", new Vector3(1532.791f, 7.875f, -368.338f), Quaternion.Euler(0.0f, 146.8f, 0.0f), chestAlAnkhPrefab);
-
-                // 7. Scroll Shelves (Al'Ankh)
                 CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_1", new Vector3(1534.890f, 6.398f, -369.552f), Quaternion.Euler(0.0f, 326.4f, 180.0f), scrollShelfAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_2", new Vector3(1533.572f, 6.398f, -370.359f), Quaternion.Euler(0.0f, 324.7f, 180.0f), scrollShelfAlAnkhPrefab);
 
-                // 8. Carpets
                 CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Red", new Vector3(1535.796f, 5.577f, -372.323f), Quaternion.Euler(90.0f, 145.9f, 0.0f), carpetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Green", new Vector3(1537.736f, 5.537f, -369.456f), Quaternion.Euler(90.0f, 54.1f, 0.0f), carpetGreenPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Blue", new Vector3(1539.450f, 5.537f, -368.251f), Quaternion.Euler(90.0f, 54.6f, 0.0f), carpetBluePrefab);
 
-                grcShopSpawned = true;
-                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Successfully spawned Gold Rock City shop!");
+                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Gold Rock City furniture stall verified/spawned.");
             }
             catch (Exception ex)
             {
@@ -160,21 +141,12 @@ namespace KemyFurniture
         // =========================================================================
         private static IEnumerator SpawnDragonCliffsShopRoutine()
         {
-            yield return new WaitForSeconds(3f);
-            if (dcShopSpawned) yield break;
+            yield return new WaitForSeconds(2.5f);
 
             var sceneryRoot = GameObject.Find("island 9 E (dragon cliffs) scenery");
-            if (sceneryRoot == null)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] Dragon Cliffs Scenery root not found!");
-                yield break;
-            }
+            if (sceneryRoot == null) yield break;
 
-            if (FurniturePlugin.LoadedPrefabs == null || FurniturePlugin.LoadedPrefabs.Length == 0)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] No prefabs found in LoadedPrefabs!");
-                yield break;
-            }
+            if (sceneryRoot.transform.Find("Kemy_DC_Custom_ShopArea") != null) yield break;
 
             try
             {
@@ -187,6 +159,7 @@ namespace KemyFurniture
 
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
+                    prefix: "DC",
                     templateStallName: null,
                     templateShopAreaName: "shop (1)",
                     templateShopkeeperName: "shopkeeper (1)",
@@ -199,19 +172,16 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
-                Func<string, GameObject> getPrefab = (name) =>
-                    FurniturePlugin.LoadedPrefabs.FirstOrDefault(p => p != null && p.name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-                GameObject cabinetPrefab = getPrefab("Cabinet") ?? FurniturePlugin.LoadedPrefabs[0];
-                GameObject cabinetSmallPrefab = getPrefab("CabinetSmall") ?? cabinetPrefab;
-                GameObject cabinetWidePrefab = getPrefab("CabinetWide") ?? cabinetPrefab;
-                GameObject bedPrefab = getPrefab("Bed") ?? FurniturePlugin.LoadedPrefabs[1];
-                GameObject chestPrefab = getPrefab("SeaChest") ?? FurniturePlugin.LoadedPrefabs[2];
-                GameObject carpetPrefab = getPrefab("Carpet") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(4) ?? chestPrefab;
-                GameObject carpetBluePrefab = getPrefab("CarpetBlue") ?? carpetPrefab;
-                GameObject carpetGreenPrefab = getPrefab("CarpetGreen") ?? carpetPrefab;
-                GameObject scrollShelfPrefab = getPrefab("ScrollShelf") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(1) ?? chestPrefab;
-                GameObject navigatorTablePrefab = getPrefab("NavigatorTable") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(0) ?? chestPrefab;
+                GameObject cabinetPrefab = ResolvePrefab("Cabinet");
+                GameObject cabinetSmallPrefab = ResolvePrefab("CabinetSmall");
+                GameObject cabinetWidePrefab = ResolvePrefab("CabinetWide");
+                GameObject bedPrefab = ResolvePrefab("Bed");
+                GameObject chestPrefab = ResolvePrefab("SeaChest");
+                GameObject carpetPrefab = ResolvePrefab("Carpet");
+                GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
+                GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
+                GameObject scrollShelfPrefab = ResolvePrefab("ScrollShelf");
+                GameObject navigatorTablePrefab = ResolvePrefab("NavigatorTable");
 
                 Transform parent = sceneryRoot.transform;
 
@@ -222,21 +192,18 @@ namespace KemyFurniture
                 CreateShopItemSpawner(parent, "Kemy_DC_Chest_Upper", new Vector3(-114.621f, 3.302f, -538.114f), Quaternion.Euler(3.8f, 42.4f, 0.0f), chestPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Lower", new Vector3(-112.385f, 2.285f, -537.402f), Quaternion.Euler(0.0f, 134.1f, 0.0f), bedPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Upper", new Vector3(-112.452f, 3.089f, -537.365f), Quaternion.Euler(0.1f, 134.9f, 358.5f), bedPrefab);
+
+                // Tall Cabinets (Original Aestrin)
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_1", new Vector3(-110.891f, 2.155f, -538.721f), Quaternion.Euler(0.3f, 45.1f, 359.8f), cabinetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_2", new Vector3(-110.328f, 2.149f, -538.106f), Quaternion.Euler(0.0f, 43.3f, 0.1f), cabinetPrefab);
 
-                // Small Cabinet (Nightstand)
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetSmall", new Vector3(-114.238f, 3.118f, -534.576f), Quaternion.Euler(0.0f, 44.3f, 0.0f), cabinetSmallPrefab);
-
-                // Wide Cabinet (Dresser)
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetWide", new Vector3(-114.0f, 2.078f, -534.8f), keeperRot, cabinetWidePrefab);
-
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet", new Vector3(-111.645f, 2.100f, -536.655f), Quaternion.Euler(101.2f, 46.3f, 0.2f), carpetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet_Green", new Vector3(-111.449f, 1.983f, -535.442f), Quaternion.Euler(90.0f, 270.0f, 223.7f), carpetGreenPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet_Blue", new Vector3(-109.771f, 2.018f, -537.092f), Quaternion.Euler(90.0f, 119.1f, 73.4f), carpetBluePrefab);
 
-                dcShopSpawned = true;
-                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Successfully spawned all Dragon Cliffs furniture sale points!");
+                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Dragon Cliffs furniture stall verified/spawned.");
             }
             catch (Exception ex)
             {
@@ -249,21 +216,12 @@ namespace KemyFurniture
         // =========================================================================
         private static IEnumerator SpawnFortAestrinShopRoutine()
         {
-            yield return new WaitForSeconds(3f);
-            if (faShopSpawned) yield break;
+            yield return new WaitForSeconds(2.5f);
 
             var sceneryRoot = GameObject.Find("island 15 M (Fort) scenery");
-            if (sceneryRoot == null)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] Fort Aestrin Scenery root not found!");
-                yield break;
-            }
+            if (sceneryRoot == null) yield break;
 
-            if (FurniturePlugin.LoadedPrefabs == null || FurniturePlugin.LoadedPrefabs.Length == 0)
-            {
-                FurniturePlugin.DiagLogger.LogError("[KEMY FURNITURE] No prefabs found in LoadedPrefabs!");
-                yield break;
-            }
+            if (sceneryRoot.transform.Find("Kemy_FA_Custom_ShopArea") != null) yield break;
 
             try
             {
@@ -279,6 +237,7 @@ namespace KemyFurniture
 
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
+                    prefix: "FA",
                     templateStallName: "market stall medi 3 (1)",
                     templateShopAreaName: "shop area (3)",
                     templateShopkeeperName: "shopkeeper (3)",
@@ -291,53 +250,38 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
-                Func<string, GameObject> getPrefab = (name) =>
-                    FurniturePlugin.LoadedPrefabs.FirstOrDefault(p => p != null && p.name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-                GameObject cabinetPrefab = getPrefab("Cabinet") ?? FurniturePlugin.LoadedPrefabs[0];
-                GameObject cabinetSmallPrefab = getPrefab("CabinetSmall") ?? cabinetPrefab;
-                GameObject cabinetWidePrefab = getPrefab("CabinetWide") ?? cabinetPrefab;
-                GameObject bedPrefab = getPrefab("Bed") ?? FurniturePlugin.LoadedPrefabs[1];
-                GameObject chestPrefab = getPrefab("SeaChest") ?? FurniturePlugin.LoadedPrefabs[2];
-                GameObject carpetPrefab = getPrefab("Carpet") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(4) ?? chestPrefab;
-                GameObject carpetBluePrefab = getPrefab("CarpetBlue") ?? carpetPrefab;
-                GameObject carpetGreenPrefab = getPrefab("CarpetGreen") ?? carpetPrefab;
-                GameObject scrollShelfPrefab = getPrefab("ScrollShelf") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(1) ?? chestPrefab;
-                GameObject navigatorTablePrefab = getPrefab("NavigatorTable") ?? FurniturePlugin.LoadedPrefabs.ElementAtOrDefault(0) ?? chestPrefab;
+                GameObject cabinetPrefab = ResolvePrefab("Cabinet");
+                GameObject cabinetSmallPrefab = ResolvePrefab("CabinetSmall");
+                GameObject cabinetWidePrefab = ResolvePrefab("CabinetWide");
+                GameObject bedPrefab = ResolvePrefab("Bed");
+                GameObject chestPrefab = ResolvePrefab("SeaChest");
+                GameObject carpetPrefab = ResolvePrefab("Carpet");
+                GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
+                GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
+                GameObject scrollShelfPrefab = ResolvePrefab("ScrollShelf");
+                GameObject navigatorTablePrefab = ResolvePrefab("NavigatorTable");
 
                 Transform parent = sceneryRoot.transform;
 
-                // 1. Navigator's Table
                 CreateShopItemSpawner(parent, "Kemy_FA_NavigatorTable", new Vector3(-115.431f, 2.129f, 43.826f), Quaternion.Euler(270.8f, 111.4f, 157.3f), navigatorTablePrefab);
-
-                // 2. Sea Chests
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Lower", new Vector3(-115.441f, 2.514f, 45.624f), Quaternion.Euler(0.3f, 359.1f, 0.0f), chestPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Upper", new Vector3(-115.441f, 3.294f, 45.624f), Quaternion.Euler(0.3f, 0.2f, 0.0f), chestPrefab);
-
-                // 3. Scroll Shelves
                 CreateShopItemSpawner(parent, "Kemy_FA_ScrollShelf_Lower", new Vector3(-112.023f, 2.362f, 46.443f), Quaternion.Euler(0.2f, 178.2f, 89.9f), scrollShelfPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_ScrollShelf_Upper", new Vector3(-112.016f, 2.864f, 46.444f), Quaternion.Euler(0.2f, 179.4f, 269.9f), scrollShelfPrefab);
-
-                // 4. Bunk Beds
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Lower", new Vector3(-111.126f, 2.313f, 45.245f), Quaternion.Euler(359.9f, 270.2f, 0.0f), bedPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Upper", new Vector3(-111.126f, 3.130f, 45.245f), Quaternion.Euler(359.9f, 271.7f, 0.0f), bedPrefab);
 
-                // 5. Tall Cabinet
+                // Tall Cabinets (Original Aestrin): Cabinet 1 & Cabinet 2 placed side-by-side towards the beds
                 CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_1", new Vector3(-111.617f, 2.164f, 43.250f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
+                CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_2", new Vector3(-111.350f, 2.164f, 44.200f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
 
-                // 6. Wide Cabinet (Dresser)
                 CreateShopItemSpawner(parent, "Kemy_FA_CabinetWide", new Vector3(-115.655f, 2.124f, 47.343f), Quaternion.Euler(0.3f, 359.3f, 0.0f), cabinetWidePrefab);
-
-                // 7. Small Cabinet (Nightstand)
                 CreateShopItemSpawner(parent, "Kemy_FA_CabinetSmall", new Vector3(-110.438f, 2.131f, 46.485f), Quaternion.Euler(359.8f, 1.1f, 359.9f), cabinetSmallPrefab);
-
-                // 8. Carpets
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet", new Vector3(-113.707f, 2.123f, 45.453f), Quaternion.Euler(270.0f, 359.4f, 0.0f), carpetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Blue", new Vector3(-113.710f, 2.123f, 46.464f), Quaternion.Euler(89.8f, 179.0f, 359.3f), carpetBluePrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Green", new Vector3(-113.665f, 2.123f, 47.494f), Quaternion.Euler(89.7f, 172.9f, 353.2f), carpetGreenPrefab);
 
-                faShopSpawned = true;
-                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Successfully spawned all Fort Aestrin furniture sale points!");
+                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Fort Aestrin furniture stall verified/spawned.");
             }
             catch (Exception ex)
             {
@@ -350,6 +294,7 @@ namespace KemyFurniture
         // =========================================================================
         private static ShopArea CreateClonedShop(
             GameObject scenery,
+            string prefix,
             string templateStallName,
             string templateShopAreaName,
             string templateShopkeeperName,
@@ -371,7 +316,7 @@ namespace KemyFurniture
                 if (stallTemplate != null)
                 {
                     GameObject clonedStall = UnityEngine.Object.Instantiate(stallTemplate.gameObject, scenery.transform);
-                    clonedStall.name = "Kemy_Custom_MarketStall_Mesh";
+                    clonedStall.name = $"Kemy_{prefix}_Custom_MarketStall_Mesh";
                     clonedStall.transform.localPosition = stallPos;
                     clonedStall.transform.localRotation = stallRot;
 
@@ -379,10 +324,6 @@ namespace KemyFurniture
                     {
                         r.enabled = true;
                     }
-                }
-                else
-                {
-                    FurniturePlugin.DiagLogger.LogWarning($"[KEMY FURNITURE] Could not find stall template matching '{templateStallName}'!");
                 }
             }
 
@@ -396,7 +337,7 @@ namespace KemyFurniture
             }
 
             GameObject clonedShop = UnityEngine.Object.Instantiate(shopAreaTemplate.gameObject, scenery.transform);
-            clonedShop.name = "Kemy_Custom_ShopArea";
+            clonedShop.name = $"Kemy_{prefix}_Custom_ShopArea";
             clonedShop.transform.localPosition = shopAreaPos;
             clonedShop.transform.localRotation = shopAreaRot;
             clonedShop.transform.localScale = Vector3.one;
@@ -433,7 +374,7 @@ namespace KemyFurniture
             }
 
             GameObject clonedKeeper = UnityEngine.Object.Instantiate(keeperTemplate.gameObject, scenery.transform);
-            clonedKeeper.name = "Kemy_Custom_Shopkeeper";
+            clonedKeeper.name = $"Kemy_{prefix}_Custom_Shopkeeper";
             clonedKeeper.transform.localPosition = keeperPos;
             clonedKeeper.transform.localRotation = keeperRot;
 
@@ -462,6 +403,12 @@ namespace KemyFurniture
         private static void CreateShopItemSpawner(Transform parent, string nodeName, Vector3 position, Quaternion rotation, GameObject prefab)
         {
             if (prefab == null) return;
+
+            Transform existing = parent.Find(nodeName);
+            if (existing != null)
+            {
+                UnityEngine.Object.Destroy(existing.gameObject);
+            }
 
             GameObject spawnerNode = new GameObject(nodeName);
             spawnerNode.transform.parent = parent;
