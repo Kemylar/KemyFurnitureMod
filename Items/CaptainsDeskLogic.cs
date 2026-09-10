@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
 using KemyFurniture.Core;
 
-namespace KemyFurniture.Items.Cabinet
+namespace KemyFurniture.Items.CaptainsDesk
 {
     [RequireComponent(typeof(ShipItemCrate))]
-    public class CabinetWideLogic : MonoBehaviour, ICustomFurnitureLogic
+    public class CaptainsDeskLogic : MonoBehaviour, ICustomFurnitureLogic
     {
         public bool OverrideLookUI => true;
-        public string CustomControlPrompt => "Open Wide Cabinet";
+        public string CustomControlPrompt => "Open Desk";
         public bool HasCustomGrid => true;
-        public Vector2 GridDimensions => new Vector2(6f, 3f); // 18 slots
+        public Vector2 GridDimensions => new Vector2(4f, 3f); // 12 slots (4 wide, 3 tall)
 
         public bool OnAltActivate(ShipItem item)
         {

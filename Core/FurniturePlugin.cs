@@ -14,7 +14,7 @@ namespace KemyFurniture
     {
         public const string PLUGIN_GUID = "com.kemy.kemyfurniture";
         public const string PLUGIN_NAME = "Kemy's Furniture";
-        public const string PLUGIN_VERSION = "1.3.2";
+        public const string PLUGIN_VERSION = "1.3.3";
 
         public static AssetBundle MainAssetBundle { get; private set; }
         public static GameObject[] LoadedPrefabs { get; private set; }
@@ -39,7 +39,7 @@ namespace KemyFurniture
                 return;
             }
 
-            // 2. Extract and configure prefabs
+            // 2. Extract, patch shaders for fog, and configure prefabs
             LoadedPrefabs = MainAssetBundle.LoadAllAssets<GameObject>();
 
             if (LoadedPrefabs != null)
@@ -49,6 +49,7 @@ namespace KemyFurniture
                     if (prefab == null) continue;
                     Core.ItemSetup.ConfigurePrefabProperties(prefab);
                 }
+                DiagLogger.LogInfo("[KEMY FURNITURE] Prefabs configured and shaders rebound to native Standard.");
             }
 
             // 3. Apply Harmony patches
@@ -63,13 +64,20 @@ namespace KemyFurniture
                 DiagLogger.LogError($"[KEMY FURNITURE] Failed to apply patches: {ex}");
             }
 
-            // 4. Register scene hook for custom shop spawning
+            // 4. Register scene hooks
+            SceneManager.sceneLoaded += OnSceneLoadedInternal;
             SceneManager.sceneLoaded += ShopStallInjection.OnSceneLoaded;
+        }
+
+        private static void OnSceneLoadedInternal(Scene scene, LoadSceneMode mode)
+        {
+            ForceDirectDirectoryInjection();
         }
 
         public static void ForceDirectDirectoryInjection()
         {
             if (LoadedPrefabs == null || LoadedPrefabs.Length == 0) return;
+            if (PrefabsDirectory.instance == null || PrefabsDirectory.instance.directory == null) return;
 
             try
             {
@@ -97,6 +105,7 @@ namespace KemyFurniture
 
         private void OnDestroy()
         {
+            SceneManager.sceneLoaded -= OnSceneLoadedInternal;
             SceneManager.sceneLoaded -= ShopStallInjection.OnSceneLoaded;
         }
     }

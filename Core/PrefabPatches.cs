@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace KemyFurniture.Core
 {
-    // 1. PREVENT TOGGLECOLLIDER CRASHES
+    // 1. PREVENT TOGGLECOLLIDER CRASHES (concave mesh / null collider protection)
     [HarmonyPatch(typeof(ItemRigidbody), "ToggleCollider")]
     public static class ItemRigidbodyNREGuard
     {
@@ -12,7 +12,7 @@ namespace KemyFurniture.Core
         public static Exception Finalizer(Exception __exception) => null;
     }
 
-    // 2. PREVENT UPDATEMASS NRE ON RESTOCK
+    // 2. PREVENT UPDATEMASS NRE ON RESTOCK / KINEMATIC FREEZE
     [HarmonyPatch(typeof(ItemRigidbody), "UpdateMass")]
     public static class ItemRigidbodyMassGuard
     {
@@ -40,13 +40,14 @@ namespace KemyFurniture.Core
             if (item == null) return;
             string name = item.gameObject.name.ToLower();
 
-            if (name.Contains("cabinetsmall")) item.value = 480;
+            if (name.Contains("captaindesk") || name.Contains("captainsdesk")) item.value = 750;
+            else if (name.Contains("cabinetsmall")) item.value = 480;
             else if (name.Contains("cabinetwide")) item.value = 720;
             else if (name.Contains("cabinet")) item.value = 1200;
             else if (name.Contains("chest") || name.Contains("seachest")) item.value = 800;
             else if (name.Contains("scroll") || name.Contains("shelf")) item.value = 450;
             else if (name.Contains("carpet")) item.value = 400;
-            else if (name.Contains("navigatortable") || name.Contains("table")) item.value = 650;
+            else if (name.Contains("navigatordesk") || name.Contains("navigatortable") || name.Contains("table")) item.value = 650;
             else if (name.Contains("bed")) item.value = 950;
         }
     }
@@ -64,7 +65,7 @@ namespace KemyFurniture.Core
         }
     }
 
-    // 5. GLOBAL PREFAB DIRECTORY INJECTION
+    // 5. DIRECTORY INJECTION HOOK (Prevents null instantiation during save loads)
     [HarmonyPatch(typeof(PrefabsDirectory), "PopulateShipItems")]
     public static class FurnitureDirectoryInjectionPatch
     {
@@ -141,7 +142,6 @@ namespace KemyFurniture.Core
         [HarmonyPrefix]
         public static bool Prefix(ShipItem __instance)
         {
-            // If unsold, hand off directly to vanilla purchase logic
             if (!__instance.sold) return true;
 
             var customLogic = __instance.GetComponent<ICustomFurnitureLogic>();

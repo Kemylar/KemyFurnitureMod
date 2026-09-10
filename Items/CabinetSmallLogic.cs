@@ -7,7 +7,7 @@ namespace KemyFurniture.Items.Cabinet
     public class CabinetSmallLogic : MonoBehaviour, ICustomFurnitureLogic
     {
         public bool OverrideLookUI => true;
-        public string CustomControlPrompt => "Open Nightstand";
+        public string CustomControlPrompt => "Open Small Cabinet";
         public bool HasCustomGrid => true;
         public Vector2 GridDimensions => new Vector2(4f, 3f); // 12 slots
 

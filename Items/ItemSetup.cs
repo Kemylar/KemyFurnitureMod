@@ -2,7 +2,9 @@
 using UnityEngine;
 using KemyFurniture.Items.Bed;
 using KemyFurniture.Items.Cabinet;
+using KemyFurniture.Items.CaptainsDesk;
 using KemyFurniture.Items.Carpet;
+using KemyFurniture.Items.NavigatorDesk;
 using KemyFurniture.Items.ScrollShelf;
 using KemyFurniture.Items.SeaChest;
 
@@ -10,6 +12,8 @@ namespace KemyFurniture.Core
 {
     public static class ItemSetup
     {
+        private static Shader cachedNativeStandard;
+
         public static void RegisterSaveIndex(GameObject prefab, int saveIndex)
         {
             if (prefab == null) return;
@@ -22,106 +26,119 @@ namespace KemyFurniture.Core
         {
             if (prefab == null) return;
 
-            string name = prefab.name.ToLower();
-            var shipItem = prefab.GetComponent<ShipItem>();
+            ApplyFogTest(prefab);
 
-            // 1. Small Cabinet (Nightstand & Al'Ankh Variant)
-            if (name.Contains("cabinetsmall"))
+            string name = prefab.name.ToLower();
+            var shipItem = prefab.GetComponent<ShipItem>() ?? prefab.AddComponent<ShipItem>();
+
+            SanitizeRootColliders(prefab);
+
+            // 1. Captain's Desk
+            if (name.Contains("captaindesk") || name.Contains("captainsdesk"))
             {
                 EnsureCrateComponents(prefab);
-                if (shipItem != null)
+                shipItem.name = "Captain's Desk";
+                shipItem.lookText = "Captain's Desk";
+                if (prefab.GetComponent<CaptainsDeskLogic>() == null)
                 {
-                    shipItem.name = name.Contains("alankh") ? "CabinetSmallAlAnkh" : "CabinetSmall";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Nightstand" : "Nightstand";
+                    prefab.AddComponent<CaptainsDeskLogic>();
                 }
+                SetItemValue(prefab, 750);
+            }
+            // 2. Small Cabinet
+            else if (name.Contains("cabinetsmall"))
+            {
+                EnsureCrateComponents(prefab);
+                shipItem.name = "Small Cabinet";
+                shipItem.lookText = "Small Cabinet";
                 if (prefab.GetComponent<CabinetSmallLogic>() == null)
                 {
                     prefab.AddComponent<CabinetSmallLogic>();
                 }
                 SetItemValue(prefab, 480);
             }
-            // 2. Wide Cabinet (Dresser & Al'Ankh Variant)
+            // 3. Wide Cabinet
             else if (name.Contains("cabinetwide"))
             {
                 EnsureCrateComponents(prefab);
-                if (shipItem != null)
-                {
-                    shipItem.name = name.Contains("alankh") ? "CabinetWideAlAnkh" : "CabinetWide";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Dresser" : "Dresser";
-                }
+                shipItem.name = "Wide Cabinet";
+                shipItem.lookText = "Wide Cabinet";
                 if (prefab.GetComponent<CabinetWideLogic>() == null)
                 {
                     prefab.AddComponent<CabinetWideLogic>();
                 }
                 SetItemValue(prefab, 720);
             }
-            // 3. Tall Cabinet (Original & Al'Ankh Variant)
+            // 4. Large Cabinet
             else if (name.Contains("cabinet"))
             {
                 EnsureCrateComponents(prefab);
-                if (shipItem != null)
-                {
-                    shipItem.name = name.Contains("alankh") ? "CabinetAlAnkh" : "Cabinet";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Cabinet" : "Cabinet";
-                }
+                shipItem.name = "Cabinet";
+                shipItem.lookText = "Cabinet";
                 if (prefab.GetComponent<CabinetLogic>() == null)
                 {
                     prefab.AddComponent<CabinetLogic>();
                 }
                 SetItemValue(prefab, 1200);
             }
-            // 4. Sea Chest & Al'Ankh Chest
+            // 5. Chest
             else if (name.Contains("chest") || name.Contains("seachest"))
             {
                 EnsureCrateComponents(prefab);
-                if (shipItem != null)
-                {
-                    shipItem.name = name.Contains("alankh") ? "ChestAlAnkh" : "SeaChest";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Chest" : "Sea Chest";
-                }
+                shipItem.name = "Chest";
+                shipItem.lookText = "Chest";
                 if (prefab.GetComponent<SeaChestLogic>() == null)
                 {
                     prefab.AddComponent<SeaChestLogic>();
                 }
                 SetItemValue(prefab, 800);
             }
-            // 5. Scroll Shelf & Al'Ankh Variant
+            // 6. Scroll Shelf
             else if (name.Contains("scroll") || name.Contains("shelf"))
             {
                 EnsureCrateComponents(prefab);
-                if (shipItem != null)
-                {
-                    shipItem.name = name.Contains("alankh") ? "ScrollShelfAlAnkh" : "ScrollShelf";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Scroll Shelf" : "Scroll Shelf";
-                }
+                shipItem.name = "Scroll Shelf";
+                shipItem.lookText = "Scroll Shelf";
                 if (prefab.GetComponent<ScrollShelfLogic>() == null)
                 {
                     prefab.AddComponent<ScrollShelfLogic>();
                 }
                 SetItemValue(prefab, 450);
             }
-            // 6. Carpets
+            // 7. Carpets
             else if (name.Contains("carpet"))
             {
+                string cleanName = "Red Carpet";
+                if (name.Contains("blue")) cleanName = "Blue Carpet";
+                else if (name.Contains("green")) cleanName = "Green Carpet";
+
+                shipItem.name = cleanName;
+                shipItem.lookText = cleanName;
+
                 if (prefab.GetComponent<CarpetLogic>() == null)
                 {
                     prefab.AddComponent<CarpetLogic>();
                 }
                 SetItemValue(prefab, 400);
             }
-            // 7. Navigator's Drafting Table
-            else if (name.Contains("navigatortable") || name.Contains("table"))
+            // 8. Navigator's Desk
+            else if (name.Contains("navigatordesk") || name.Contains("navigatortable") || name.Contains("table"))
             {
+                shipItem.name = "Navigator's Desk";
+                shipItem.lookText = "Navigator's Desk";
+
+                if (prefab.GetComponent<NavigatorDeskLogic>() == null)
+                {
+                    prefab.AddComponent<NavigatorDeskLogic>();
+                }
                 SetItemValue(prefab, 650);
             }
-            // 8. Bunk Bed & Al'Ankh Variant
+            // 9. Bed
             else if (name.Contains("bed"))
             {
-                if (shipItem != null)
-                {
-                    shipItem.name = name.Contains("alankh") ? "BedAlAnkh" : "Bed";
-                    shipItem.lookText = name.Contains("alankh") ? "Al'Ankh Bed" : "Bed";
-                }
+                shipItem.name = "Bed";
+                shipItem.lookText = "Bed";
+
                 if (prefab.GetComponent<BedLogic>() == null)
                 {
                     prefab.AddComponent<BedLogic>();
@@ -130,8 +147,48 @@ namespace KemyFurniture.Core
             }
         }
 
+        private static void ApplyFogTest(GameObject go)
+        {
+            if (go == null) return;
+
+            if (cachedNativeStandard == null)
+            {
+                cachedNativeStandard = Shader.Find("Standard");
+            }
+
+            if (cachedNativeStandard == null) return;
+
+            foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] mats = renderer.sharedMaterials;
+                bool modified = false;
+
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    Material mat = mats[i];
+                    if (mat == null) continue;
+
+                    if (mat.shader != null && mat.shader.name.Contains("Standard"))
+                    {
+                        mat.shader = cachedNativeStandard;
+                        modified = true;
+                    }
+                }
+
+                if (modified)
+                {
+                    renderer.sharedMaterials = mats;
+                }
+            }
+        }
+
         private static void EnsureCrateComponents(GameObject prefab)
         {
+            if (prefab.GetComponent<ShipItemCrate>() == null)
+            {
+                prefab.AddComponent<ShipItemCrate>();
+            }
+
             if (prefab.GetComponent<CrateInventory>() == null)
             {
                 prefab.AddComponent<CrateInventory>();
@@ -139,6 +196,23 @@ namespace KemyFurniture.Core
 
             var btn = prefab.GetComponent<GoPointerButton>() ?? prefab.AddComponent<GoPointerButton>();
             btn.enabled = true;
+        }
+
+        private static void SanitizeRootColliders(GameObject prefab)
+        {
+            var meshCols = prefab.GetComponentsInChildren<MeshCollider>(true);
+            foreach (var col in meshCols)
+            {
+                if (!col.convex)
+                {
+                    col.convex = true;
+                }
+            }
+
+            if (prefab.GetComponent<Collider>() == null)
+            {
+                prefab.AddComponent<BoxCollider>();
+            }
         }
 
         private static void SetItemValue(GameObject prefab, int value)

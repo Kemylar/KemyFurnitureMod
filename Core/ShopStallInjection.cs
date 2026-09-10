@@ -43,13 +43,12 @@ namespace KemyFurniture
             return runner.GetComponent<CoroutineRunner>() ?? runner.AddComponent<CoroutineRunner>();
         }
 
-        // Prioritizes exact matches to prevent "Cabinet" from matching "CabinetSmall" or "CabinetAlAnkh"
         private static GameObject ResolvePrefab(string targetName)
         {
             if (FurniturePlugin.LoadedPrefabs == null || FurniturePlugin.LoadedPrefabs.Length == 0) return null;
             string cleanTarget = targetName.Replace(" ", "").Replace("_", "").ToLower();
 
-            // 1. Exact match pass
+            // 1. Exact match priority
             GameObject exact = FurniturePlugin.LoadedPrefabs.FirstOrDefault(p =>
                 p != null && p.name.Replace(" ", "").Replace("_", "").ToLower().Equals(cleanTarget, StringComparison.OrdinalIgnoreCase));
 
@@ -109,14 +108,14 @@ namespace KemyFurniture
                 GameObject carpetPrefab = ResolvePrefab("Carpet");
                 GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
                 GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
-                GameObject navigatorTablePrefab = ResolvePrefab("NavigatorTable");
+                GameObject navDeskAlAnkhPrefab = ResolvePrefab("NavigatorDeskAlAnkh") ?? ResolvePrefab("NavigatorTable");
 
                 Transform parent = sceneryRoot.transform;
 
                 CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.641f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.550f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWideAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.550f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1526.130f, 5.548f, -374.435f), Quaternion.Euler(270.0f, 236.1f, 0.0f), navigatorTablePrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1526.130f, 5.548f, -374.435f), Quaternion.Euler(0.0f, 236.1f, 0.0f), navDeskAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 5.914f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.547f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1532.814f, 6.313f, -368.393f), Quaternion.Euler(0.0f, 145.3f, 0.0f), chestAlAnkhPrefab);
@@ -193,10 +192,8 @@ namespace KemyFurniture
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Lower", new Vector3(-112.385f, 2.285f, -537.402f), Quaternion.Euler(0.0f, 134.1f, 0.0f), bedPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Upper", new Vector3(-112.452f, 3.089f, -537.365f), Quaternion.Euler(0.1f, 134.9f, 358.5f), bedPrefab);
 
-                // Tall Cabinets (Original Aestrin)
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_1", new Vector3(-110.891f, 2.155f, -538.721f), Quaternion.Euler(0.3f, 45.1f, 359.8f), cabinetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_2", new Vector3(-110.328f, 2.149f, -538.106f), Quaternion.Euler(0.0f, 43.3f, 0.1f), cabinetPrefab);
-
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetSmall", new Vector3(-114.238f, 3.118f, -534.576f), Quaternion.Euler(0.0f, 44.3f, 0.0f), cabinetSmallPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetWide", new Vector3(-114.0f, 2.078f, -534.8f), keeperRot, cabinetWidePrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet", new Vector3(-111.645f, 2.100f, -536.655f), Quaternion.Euler(101.2f, 46.3f, 0.2f), carpetPrefab);
@@ -233,7 +230,7 @@ namespace KemyFurniture
 
                 Vector3 shopAreaPos = stallPos;
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 0.0f, 0.0f);
-                Vector3 shopAreaSize = new Vector3(8.0f, 8.0f, 6.0f);
+                Vector3 shopAreaSize = new Vector3(10.0f, 10.0f, 7.0f);
 
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
@@ -259,11 +256,14 @@ namespace KemyFurniture
                 GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
                 GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
                 GameObject scrollShelfPrefab = ResolvePrefab("ScrollShelf");
-                GameObject navigatorTablePrefab = ResolvePrefab("NavigatorTable");
+                GameObject captainsDeskPrefab = ResolvePrefab("CaptainsDesk") ?? ResolvePrefab("CaptainDesk");
+                GameObject navDeskAestrinPrefab = ResolvePrefab("NavigatorDeskAestrin") ?? ResolvePrefab("NavigatorDesk");
 
                 Transform parent = sceneryRoot.transform;
 
-                CreateShopItemSpawner(parent, "Kemy_FA_NavigatorTable", new Vector3(-115.431f, 2.129f, 43.826f), Quaternion.Euler(270.8f, 111.4f, 157.3f), navigatorTablePrefab);
+                // Navigator Desk Aestrin: Snapped Y rotation from 111.4f to 90.0f
+                CreateShopItemSpawner(parent, "Kemy_FA_NavigatorDeskAestrin", new Vector3(-115.431f, 2.129f, 43.826f), Quaternion.Euler(0.0f, 270.0f, 0.0f), navDeskAestrinPrefab);
+
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Lower", new Vector3(-115.441f, 2.514f, 45.624f), Quaternion.Euler(0.3f, 359.1f, 0.0f), chestPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Upper", new Vector3(-115.441f, 3.294f, 45.624f), Quaternion.Euler(0.3f, 0.2f, 0.0f), chestPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_ScrollShelf_Lower", new Vector3(-112.023f, 2.362f, 46.443f), Quaternion.Euler(0.2f, 178.2f, 89.9f), scrollShelfPrefab);
@@ -271,7 +271,6 @@ namespace KemyFurniture
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Lower", new Vector3(-111.126f, 2.313f, 45.245f), Quaternion.Euler(359.9f, 270.2f, 0.0f), bedPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Upper", new Vector3(-111.126f, 3.130f, 45.245f), Quaternion.Euler(359.9f, 271.7f, 0.0f), bedPrefab);
 
-                // Tall Cabinets (Original Aestrin): Cabinet 1 & Cabinet 2 placed side-by-side towards the beds
                 CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_1", new Vector3(-111.617f, 2.164f, 43.250f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_2", new Vector3(-111.350f, 2.164f, 44.200f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
 
@@ -281,7 +280,8 @@ namespace KemyFurniture
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Blue", new Vector3(-113.710f, 2.123f, 46.464f), Quaternion.Euler(89.8f, 179.0f, 359.3f), carpetBluePrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Green", new Vector3(-113.665f, 2.123f, 47.494f), Quaternion.Euler(89.7f, 172.9f, 353.2f), carpetGreenPrefab);
 
-                FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Fort Aestrin furniture stall verified/spawned.");
+                // Captain's Desk: Lowered Y from 2.496f to 2.129f to match ground level
+                CreateShopItemSpawner(parent, "Kemy_FA_CaptainsDesk", new Vector3(-109.800f, 2.279f, 43.833f), Quaternion.Euler(0.0f, 90.0f, 0.0f), captainsDeskPrefab);
             }
             catch (Exception ex)
             {

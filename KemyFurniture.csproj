@@ -73,6 +73,7 @@
     <Compile Include="Items\CabinetLogic.cs" />
     <Compile Include="Items\CabinetSmallLogic.cs" />
     <Compile Include="Items\CabinetWideLogic.cs" />
+    <Compile Include="Items\CaptainsDeskLogic.cs" />
     <Compile Include="Items\CarpetLogic.cs" />
     <Compile Include="Items\ItemSetup.cs" />
     <Compile Include="Items\NavigatorDeskLogic.cs" />
