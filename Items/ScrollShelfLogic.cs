@@ -18,14 +18,15 @@ namespace KemyFurniture.Items.ScrollShelf
         {
             inventory = GetComponent<CrateInventory>();
 
-            // Find scroll nodes anywhere in the hierarchy
+            // Find scroll nodes Scroll_01 through Scroll_12 anywhere in the hierarchy
             visualScrolls = new Transform[12];
             Transform[] allTransforms = GetComponentsInChildren<Transform>(true);
 
             for (int i = 0; i < 12; i++)
             {
-                string targetNameD2 = $"Scroll_{i:D2}";
-                string targetNameSimple = $"Scroll_{i}";
+                int scrollNum = i + 1; // 1 to 12
+                string targetNameD2 = $"Scroll_{scrollNum:D2}"; // Scroll_01 ... Scroll_12
+                string targetNameSimple = $"Scroll_{scrollNum}";  // Scroll_1 ... Scroll_12
 
                 foreach (Transform t in allTransforms)
                 {
