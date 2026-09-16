@@ -166,4 +166,94 @@ namespace KemyFurniture.Core
             }
         }
     }
+
+    // 9. CARGO PORTER / CART DUDE COMPATIBILITY (Allows storage furniture to be transported)
+    [HarmonyPatch(typeof(CargoCarrier), nameof(CargoCarrier.InsertItem))]
+    public static class CargoCarrierInsertPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(ShipItem item, out bool __state)
+        {
+            __state = false;
+            if (item == null) return;
+
+            // Target custom furniture (Prefab index range or custom interface)
+            int index = item.GetPrefabIndex();
+            bool isCustomFurniture = (index >= 450 && index <= 480) || item.GetComponent<ICustomFurnitureLogic>() != null;
+
+            if (isCustomFurniture)
+            {
+                // Vanilla rejects any item of type ShipItemCrate if amount <= 0f
+                if (item.amount <= 0f)
+                {
+                    item.amount = 1f; // Temporarily spoof amount > 0 to bypass unsealed crate check
+                    __state = true;
+                }
+            }
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(ShipItem item, bool __state)
+        {
+            // Restore amount back to 0f immediately after validation
+            if (__state && item != null)
+            {
+                item.amount = 0f;
+            }
+        }
+    }
+    // 10. PREVENT CARGOSTORAGEUI CRASH ON FURNITURE / ITEMS WITHOUT GOOD COMPONENT
+    [HarmonyPatch(typeof(CargoStorageUI), nameof(CargoStorageUI.UpdateButtons))]
+    public static class CargoStorageUIUpdateButtonsPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(CargoStorageUI __instance)
+        {
+            if (__instance.currentCarrier == null) return false;
+
+            int num = __instance.currentPage * __instance.buttons.Length;
+            for (int i = 0; i < __instance.buttons.Length; i++)
+            {
+                int num2 = i + num;
+                if (num2 > __instance.currentCarrier.cargo.Count - 1)
+                {
+                    __instance.buttons[i].gameObject.SetActive(false);
+                    continue;
+                }
+
+                __instance.buttons[i].gameObject.SetActive(true);
+                ShipItem cargoItem = __instance.currentCarrier.cargo[num2];
+                string newText = cargoItem != null ? cargoItem.name : "Unknown Item";
+                __instance.buttons[i].ChangeText(newText);
+
+                float num3 = __instance.currentCarrier.GetWithdrawPrice(num2);
+                string priceString = "";
+                if (num3 > 0f)
+                {
+                    priceString = "storage fee:\n" + num3 + " " + PlayerGold.GetCurrencyName((int)__instance.currentCarrier.currency);
+                }
+                __instance.buttons[i].SetPriceString(priceString);
+
+                if (num3 > 0f)
+                {
+                    __instance.buttons[i].SetMaterial(__instance.cargoStorageFeeMat);
+                }
+                else
+                {
+                    // Safe check: furniture won't have Good component
+                    Good goodComp = cargoItem != null ? cargoItem.GetComponent<Good>() : null;
+                    if (goodComp != null && goodComp.GetMissionIndex() >= 0)
+                    {
+                        __instance.buttons[i].SetMaterial(__instance.cargoMissionMat);
+                    }
+                    else
+                    {
+                        __instance.buttons[i].SetMaterial(__instance.cargoDefaultMat);
+                    }
+                }
+            }
+
+            return false; // Skip the vanilla crash-prone method
+        }
+    }
 }
