@@ -18,6 +18,7 @@ namespace KemyFurniture
                 return;
             }
 
+            // Region Routing
             if (sceneName.Contains("gold rock"))
             {
                 GetRunner().StartCoroutine(SpawnGoldRockShopRoutine());
@@ -60,7 +61,7 @@ namespace KemyFurniture
         }
 
         // =========================================================================
-        // 1. GOLD ROCK CITY SHOP SETUP
+        // 1. GOLD ROCK CITY SHOP SETUP (AL'ANKH REGION)
         // =========================================================================
         private static IEnumerator SpawnGoldRockShopRoutine()
         {
@@ -73,12 +74,14 @@ namespace KemyFurniture
 
             try
             {
+                // Stall & Keeper Anchors
                 Vector3 stallPos = new Vector3(1537.722f, 7.300f, -367.737f);
                 Quaternion stallRot = Quaternion.Euler(270.0f, 235.0f, 0.0f);
 
                 Vector3 keeperPos = new Vector3(1536.423f, 5.497f, -366.105f);
                 Quaternion keeperRot = Quaternion.Euler(0f, 145.9f, 0f);
 
+                // Shop Interaction Boundary Box (Extended by 0.5m in all directions)
                 Vector3 shopAreaPos = new Vector3(1533.948f, 5.537f, -370.439f);
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 235.1f, 0.0f);
                 Vector3 shopAreaSize = new Vector3(14.0f, 18.0f, 10.0f);
@@ -86,7 +89,7 @@ namespace KemyFurniture
                 ShopArea newShopArea = CreateClonedShop(
                     sceneryRoot,
                     prefix: "GRC",
-                    templateStallName: "market_stall (8)",
+                    templateStallName: null,
                     templateShopAreaName: "shop",
                     templateShopkeeperName: "shopkeeper (6)",
                     stallPos: stallPos,
@@ -98,6 +101,10 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
+                // Attach debug visualizer
+                AttachShopAreaVisualizer(newShopArea, shopAreaSize);
+
+                // --- Prefab Resolution: Al'Ankh Regional Variants ---
                 GameObject cabinetAlAnkhPrefab = ResolvePrefab("CabinetAlAnkh") ?? ResolvePrefab("Cabinet");
                 GameObject cabinetWideAlAnkhPrefab = ResolvePrefab("CabinetWideAlAnkh") ?? ResolvePrefab("CabinetWide");
                 GameObject cabinetSmallAlAnkhPrefab = ResolvePrefab("CabinetSmallAlAnkh") ?? ResolvePrefab("CabinetSmall");
@@ -110,22 +117,39 @@ namespace KemyFurniture
                 GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
                 GameObject navDeskAlAnkhPrefab = ResolvePrefab("NavigatorDeskAlAnkh") ?? ResolvePrefab("NavigatorTable");
 
+                GameObject cushionRedPrefab = ResolvePrefab("CushionRed");
+                GameObject cushionWhitePrefab = ResolvePrefab("CushionWhite");
+
                 Transform parent = sceneryRoot.transform;
 
-                CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.641f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.550f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWideAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.550f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1526.130f, 5.548f, -374.435f), Quaternion.Euler(0.0f, 236.1f, 0.0f), navDeskAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 5.914f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.547f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1532.814f, 6.313f, -368.393f), Quaternion.Euler(0.0f, 145.3f, 0.0f), chestAlAnkhPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Upper", new Vector3(1532.791f, 7.875f, -368.338f), Quaternion.Euler(0.0f, 146.8f, 0.0f), chestAlAnkhPrefab);
+                // --- GRC Item Placement: Cabinets & Beds ---
+                CreateShopItemSpawner(parent, "Kemy_GRC_Cabinet_1", new Vector3(1527.726f, 5.891f, -371.374f), Quaternion.Euler(0.0f, 146.4f, 0.1f), cabinetAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetWide", new Vector3(1528.834f, 5.800f, -372.561f), Quaternion.Euler(0.0f, 145.2f, 0.0f), cabinetWideAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_CabinetSmall", new Vector3(1530.410f, 5.800f, -373.350f), Quaternion.Euler(0.0f, 146.7f, 0.0f), cabinetSmallAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Lower", new Vector3(1531.235f, 6.164f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Bed_Upper", new Vector3(1531.235f, 7.797f, -370.532f), Quaternion.Euler(0.0f, 147.5f, 0.0f), bedAlAnkhPrefab);
+
+                // --- GRC Item Placement: Sea Chests (Stacked Pair) ---
+                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Lower", new Vector3(1531.997f, 6.625f, -368.457f), Quaternion.Euler(0.0f, 144.0f, 0.0f), chestAlAnkhPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Chest_Upper", new Vector3(1531.997f, 8.213f, -368.457f), Quaternion.Euler(0.0f, 144.0f, 0.0f), chestAlAnkhPrefab);
+
+                // --- GRC Item Placement: Scroll Shelves ---
                 CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_1", new Vector3(1534.890f, 6.398f, -369.552f), Quaternion.Euler(0.0f, 326.4f, 180.0f), scrollShelfAlAnkhPrefab);
                 CreateShopItemSpawner(parent, "Kemy_GRC_ScrollShelf_2", new Vector3(1533.572f, 6.398f, -370.359f), Quaternion.Euler(0.0f, 324.7f, 180.0f), scrollShelfAlAnkhPrefab);
 
-                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Red", new Vector3(1535.796f, 5.577f, -372.323f), Quaternion.Euler(90.0f, 145.9f, 0.0f), carpetPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Green", new Vector3(1537.736f, 5.537f, -369.456f), Quaternion.Euler(90.0f, 54.1f, 0.0f), carpetGreenPrefab);
-                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Blue", new Vector3(1539.450f, 5.537f, -368.251f), Quaternion.Euler(90.0f, 54.6f, 0.0f), carpetBluePrefab);
+                // --- GRC Item Placement: Regional Carpets (Layered Out Front) ---
+                Quaternion carpetRot = Quaternion.Euler(90.0f, 145.9f, 0.0f);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Red", new Vector3(1535.796f, 5.577f, -372.323f), carpetRot, carpetPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Green", new Vector3(1531.998f, 5.577f, -374.867f), carpetRot, carpetGreenPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_Carpet_Blue", new Vector3(1533.590f, 5.630f, -373.365f), carpetRot, carpetBluePrefab);
+
+                // --- GRC Item Placement: Navigator Desk ---
+                CreateShopItemSpawner(parent, "Kemy_GRC_NavigatorTable", new Vector3(1539.571f, 5.597f, -366.124f), Quaternion.Euler(0.0f, 234.8f, 0.0f), navDeskAlAnkhPrefab);
+
+                // --- GRC Item Placement: Floor Cushions ---
+                Quaternion cushionRot = Quaternion.Euler(0.0f, 145.9f, 90.0f);
+                CreateShopItemSpawner(parent, "Kemy_GRC_CushionRed", new Vector3(1538.869f, 5.708f, -368.688f), cushionRot, cushionRedPrefab);
+                CreateShopItemSpawner(parent, "Kemy_GRC_CushionWhite", new Vector3(1537.573f, 5.708f, -369.704f), cushionRot, cushionWhitePrefab);
 
                 FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Gold Rock City furniture stall verified/spawned.");
             }
@@ -136,7 +160,7 @@ namespace KemyFurniture
         }
 
         // =========================================================================
-        // 2. DRAGON CLIFFS SHOP SETUP (EMERALD ARCHIPELAGO FULL SUITE)
+        // 2. DRAGON CLIFFS SHOP SETUP (EMERALD ARCHIPELAGO REGION)
         // =========================================================================
         private static IEnumerator SpawnDragonCliffsShopRoutine()
         {
@@ -149,9 +173,11 @@ namespace KemyFurniture
 
             try
             {
+                // Stall & Keeper Anchors
                 Vector3 keeperPos = new Vector3(-113.562f, 2.078f, -536.031f);
                 Quaternion keeperRot = Quaternion.Euler(0f, 45.0f, 0f);
 
+                // Shop Interaction Boundary Box
                 Vector3 shopAreaPos = new Vector3(-112.270f, 1.999f, -538.193f);
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 43.0f, 0.0f);
                 Vector3 shopAreaSize = new Vector3(10.64f, 5.05f, 6.5f);
@@ -171,7 +197,10 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
-                // Resolve Emerald Archipelago (EA) Prefabs
+                // Attach debug visualizer
+                AttachShopAreaVisualizer(newShopArea, shopAreaSize);
+
+                // --- Prefab Resolution: Emerald Archipelago Regional Variants ---
                 GameObject cabinetEAPrefab = ResolvePrefab("CabinetEA") ?? ResolvePrefab("Cabinet");
                 GameObject cabinetSmallEAPrefab = ResolvePrefab("CabinetSmallEA") ?? ResolvePrefab("CabinetSmall");
                 GameObject cabinetWideEAPrefab = ResolvePrefab("CabinetWideEA") ?? ResolvePrefab("CabinetWide");
@@ -180,37 +209,50 @@ namespace KemyFurniture
                 GameObject scrollShelfEAPrefab = ResolvePrefab("ScrollShelfEA") ?? ResolvePrefab("ScrollShelf");
                 GameObject navDeskEAPrefab = ResolvePrefab("NavigatorDeskEA") ?? ResolvePrefab("NavigatorTable");
 
+                GameObject chairEAPrefab = ResolvePrefab("ChairEA");
+                GameObject dividerPrefab = ResolvePrefab("Divider");
+
                 GameObject carpetPrefab = ResolvePrefab("Carpet");
                 GameObject carpetBluePrefab = ResolvePrefab("CarpetBlue") ?? carpetPrefab;
                 GameObject carpetGreenPrefab = ResolvePrefab("CarpetGreen") ?? carpetPrefab;
 
                 Transform parent = sceneryRoot.transform;
 
-                // Navigator Desk EA: Rotated 90 degrees in the opposite direction (Y = 315.0f)
+                // --- DC Item Placement: Navigator Desk ---
                 CreateShopItemSpawner(parent, "Kemy_DC_NavigatorTable", new Vector3(-116.519f, 1.997f, -536.670f), Quaternion.Euler(0.0f, 315.0f, 0.0f), navDeskEAPrefab);
 
-                // Scroll Shelves EA
+                // --- DC Item Placement: Scroll Shelves (Stacked Pair) ---
                 CreateShopItemSpawner(parent, "Kemy_DC_ScrollShelf_Lower", new Vector3(-115.249f, 2.248f, -535.453f), Quaternion.Euler(1.1f, 134.7f, 90.4f), scrollShelfEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_ScrollShelf_Upper", new Vector3(-115.190f, 2.753f, -535.475f), Quaternion.Euler(1.1f, 134.5f, 90.4f), scrollShelfEAPrefab);
 
-                // Chests EA (Lowered by 0.364f and leveled completely flat)
+                // --- DC Item Placement: Sea Chests (Stacked Pair) ---
                 CreateShopItemSpawner(parent, "Kemy_DC_Chest_Lower", new Vector3(-114.616f, 2.155f, -538.091f), Quaternion.Euler(0.0f, 42.4f, 0.0f), chestEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Chest_Upper", new Vector3(-114.621f, 2.938f, -538.114f), Quaternion.Euler(0.0f, 42.4f, 0.0f), chestEAPrefab);
 
-                // Beds EA (Aligned identical X/Z and rotation, cleanly spaced on Y)
+                // --- DC Item Placement: Beds (Stacked Bunks) ---
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Lower", new Vector3(-112.385f, 2.285f, -537.402f), Quaternion.Euler(0.0f, 134.1f, 0.0f), bedEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Bed_Upper", new Vector3(-112.385f, 3.089f, -537.402f), Quaternion.Euler(0.0f, 134.1f, 0.0f), bedEAPrefab);
 
-                // Cabinets EA
+                // --- DC Item Placement: Cabinets ---
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_1", new Vector3(-110.891f, 2.155f, -538.721f), Quaternion.Euler(0.3f, 45.1f, 359.8f), cabinetEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Cabinet_2", new Vector3(-110.328f, 2.149f, -538.106f), Quaternion.Euler(0.0f, 43.3f, 0.1f), cabinetEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetSmall", new Vector3(-114.238f, 3.118f, -534.576f), Quaternion.Euler(0.0f, 44.3f, 0.0f), cabinetSmallEAPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_CabinetWide", new Vector3(-114.0f, 2.078f, -534.8f), keeperRot, cabinetWideEAPrefab);
 
-                // Carpets
-                CreateShopItemSpawner(parent, "Kemy_DC_Carpet", new Vector3(-111.645f, 2.100f, -536.655f), Quaternion.Euler(101.2f, 46.3f, 0.2f), carpetPrefab);
+                // --- DC Item Placement: Carpets ---
+                CreateShopItemSpawner(parent, "Kemy_DC_Carpet", new Vector3(-110.736f, 2.046f, -536.406f), Quaternion.Euler(271.7f, 315.7f, 90.0f), carpetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet_Green", new Vector3(-111.449f, 1.983f, -535.442f), Quaternion.Euler(90.0f, 270.0f, 223.7f), carpetGreenPrefab);
                 CreateShopItemSpawner(parent, "Kemy_DC_Carpet_Blue", new Vector3(-109.771f, 2.018f, -537.092f), Quaternion.Euler(90.0f, 119.1f, 73.4f), carpetBluePrefab);
+
+                // --- DC Item Placement: EA Wood Chairs ---
+                CreateShopItemSpawner(parent, "Kemy_DC_ChairEA_1", new Vector3(-111.275f, 2.082f, -537.288f), Quaternion.Euler(270.0f, 134.7f, 0.0f), chairEAPrefab);
+                CreateShopItemSpawner(parent, "Kemy_DC_ChairEA_2", new Vector3(-111.909f, 2.082f, -536.646f), Quaternion.Euler(270.0f, 134.7f, 0.0f), chairEAPrefab);
+
+                // --- DC Item Placement: Room Divider Screens (Aligned Trio) ---
+                Quaternion dividerRot = Quaternion.Euler(0.0f, 45.0f, 0.0f);
+                CreateShopItemSpawner(parent, "Kemy_DC_Divider_1", new Vector3(-110.052f, 2.081f, -539.519f), dividerRot, dividerPrefab);
+                CreateShopItemSpawner(parent, "Kemy_DC_Divider_2", new Vector3(-109.575f, 2.113f, -539.077f), dividerRot, dividerPrefab);
+                CreateShopItemSpawner(parent, "Kemy_DC_Divider_3", new Vector3(-109.117f, 2.108f, -538.604f), dividerRot, dividerPrefab);
 
                 FurniturePlugin.DiagLogger.LogInfo("[KEMY FURNITURE] Dragon Cliffs furniture stall spawned with full Emerald Archipelago (EA) set.");
             }
@@ -221,7 +263,7 @@ namespace KemyFurniture
         }
 
         // =========================================================================
-        // 3. FORT AESTRIN SHOP SETUP
+        // 3. FORT AESTRIN SHOP SETUP (AESTRIN REGION)
         // =========================================================================
         private static IEnumerator SpawnFortAestrinShopRoutine()
         {
@@ -234,12 +276,14 @@ namespace KemyFurniture
 
             try
             {
+                // Stall & Keeper Anchors
                 Vector3 stallPos = new Vector3(-113.321f, 2.099f, 44.512f);
                 Quaternion stallRot = Quaternion.Euler(270.0f, 0.0f, 0.0f);
 
                 Vector3 keeperPos = new Vector3(-113.203f, 2.099f, 42.729f);
                 Quaternion keeperRot = Quaternion.Euler(0f, 0f, 0f);
 
+                // Shop Interaction Boundary Box
                 Vector3 shopAreaPos = stallPos;
                 Quaternion shopAreaRot = Quaternion.Euler(270.0f, 0.0f, 0.0f);
                 Vector3 shopAreaSize = new Vector3(10.0f, 10.0f, 7.0f);
@@ -259,6 +303,10 @@ namespace KemyFurniture
                     keeperRot: keeperRot
                 );
 
+                // Attach debug visualizer
+                AttachShopAreaVisualizer(newShopArea, shopAreaSize);
+
+                // --- Prefab Resolution: Baseline & Aestrin Variants ---
                 GameObject cabinetPrefab = ResolvePrefab("Cabinet");
                 GameObject cabinetSmallPrefab = ResolvePrefab("CabinetSmall");
                 GameObject cabinetWidePrefab = ResolvePrefab("CabinetWide");
@@ -273,24 +321,32 @@ namespace KemyFurniture
 
                 Transform parent = sceneryRoot.transform;
 
+                // --- FA Item Placement: Desks ---
                 CreateShopItemSpawner(parent, "Kemy_FA_NavigatorDeskAestrin", new Vector3(-115.431f, 2.129f, 43.826f), Quaternion.Euler(0.0f, 270.0f, 0.0f), navDeskAestrinPrefab);
+                CreateShopItemSpawner(parent, "Kemy_FA_CaptainsDesk", new Vector3(-109.800f, 2.279f, 43.833f), Quaternion.Euler(0.0f, 90.0f, 0.0f), captainsDeskPrefab);
+
+                // --- FA Item Placement: Sea Chests (Stacked Pair) ---
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Lower", new Vector3(-115.441f, 2.514f, 45.624f), Quaternion.Euler(0.3f, 359.1f, 0.0f), chestPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Chest_Upper", new Vector3(-115.441f, 3.294f, 45.624f), Quaternion.Euler(0.3f, 0.2f, 0.0f), chestPrefab);
+
+                // --- FA Item Placement: Scroll Shelves (Stacked Pair) ---
                 CreateShopItemSpawner(parent, "Kemy_FA_ScrollShelf_Lower", new Vector3(-112.023f, 2.362f, 46.443f), Quaternion.Euler(0.2f, 178.2f, 89.9f), scrollShelfPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_ScrollShelf_Upper", new Vector3(-112.016f, 2.864f, 46.444f), Quaternion.Euler(0.2f, 179.4f, 269.9f), scrollShelfPrefab);
+
+                // --- FA Item Placement: Beds (Stacked Bunks) ---
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Lower", new Vector3(-111.126f, 2.313f, 45.245f), Quaternion.Euler(359.9f, 270.2f, 0.0f), bedPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Bed_Upper", new Vector3(-111.126f, 3.130f, 45.245f), Quaternion.Euler(359.9f, 271.7f, 0.0f), bedPrefab);
 
+                // --- FA Item Placement: Cabinets ---
                 CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_1", new Vector3(-111.617f, 2.164f, 43.250f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Cabinet_2", new Vector3(-111.350f, 2.164f, 44.200f), Quaternion.Euler(0.1f, 0.2f, 0.0f), cabinetPrefab);
-
                 CreateShopItemSpawner(parent, "Kemy_FA_CabinetWide", new Vector3(-115.655f, 2.124f, 47.343f), Quaternion.Euler(0.3f, 359.3f, 0.0f), cabinetWidePrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_CabinetSmall", new Vector3(-110.438f, 2.131f, 46.485f), Quaternion.Euler(359.8f, 1.1f, 359.9f), cabinetSmallPrefab);
+
+                // --- FA Item Placement: Carpets ---
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet", new Vector3(-113.707f, 2.123f, 45.453f), Quaternion.Euler(270.0f, 359.4f, 0.0f), carpetPrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Blue", new Vector3(-113.710f, 2.123f, 46.464f), Quaternion.Euler(89.8f, 179.0f, 359.3f), carpetBluePrefab);
                 CreateShopItemSpawner(parent, "Kemy_FA_Carpet_Green", new Vector3(-113.665f, 2.123f, 47.494f), Quaternion.Euler(89.7f, 172.9f, 353.2f), carpetGreenPrefab);
-
-                CreateShopItemSpawner(parent, "Kemy_FA_CaptainsDesk", new Vector3(-109.800f, 2.279f, 43.833f), Quaternion.Euler(0.0f, 90.0f, 0.0f), captainsDeskPrefab);
             }
             catch (Exception ex)
             {
@@ -317,6 +373,7 @@ namespace KemyFurniture
         {
             Transform[] allSceneryTransforms = scenery.GetComponentsInChildren<Transform>(true);
 
+            // 1. Stall Structure Clone (Optional visual kiosk mesh)
             if (!string.IsNullOrEmpty(templateStallName))
             {
                 Transform stallTemplate = allSceneryTransforms.FirstOrDefault(t => t.name.Equals(templateStallName, StringComparison.OrdinalIgnoreCase))
@@ -336,6 +393,7 @@ namespace KemyFurniture
                 }
             }
 
+            // 2. ShopArea Trigger Zone Clone
             Transform shopAreaTemplate = allSceneryTransforms.FirstOrDefault(t => t.name.Equals(templateShopAreaName, StringComparison.OrdinalIgnoreCase))
                                       ?? allSceneryTransforms.FirstOrDefault(t => t.name.StartsWith("shop area", StringComparison.OrdinalIgnoreCase) && t.GetComponent<ShopArea>() != null)
                                       ?? allSceneryTransforms.FirstOrDefault(t => t.name.StartsWith("shop", StringComparison.OrdinalIgnoreCase) && t.GetComponent<ShopArea>() != null);
@@ -351,6 +409,7 @@ namespace KemyFurniture
             clonedShop.transform.localRotation = shopAreaRot;
             clonedShop.transform.localScale = Vector3.one;
 
+            // Strip existing children and visual meshes from the cloned shop trigger
             for (int i = clonedShop.transform.childCount - 1; i >= 0; i--)
             {
                 UnityEngine.Object.Destroy(clonedShop.transform.GetChild(i).gameObject);
@@ -367,6 +426,7 @@ namespace KemyFurniture
                 shopArea.itemsForSale.Clear();
             }
 
+            // Configure Trigger Box Dimensions
             BoxCollider box = clonedShop.GetComponent<BoxCollider>();
             if (box != null)
             {
@@ -374,6 +434,7 @@ namespace KemyFurniture
                 box.size = shopAreaSize;
             }
 
+            // 3. Shopkeeper NPC Clone
             Transform keeperTemplate = allSceneryTransforms.FirstOrDefault(t => t.name.Equals(templateShopkeeperName, StringComparison.OrdinalIgnoreCase))
                                     ?? allSceneryTransforms.FirstOrDefault(t => t.GetComponent<Shopkeeper>() != null);
 
@@ -387,6 +448,7 @@ namespace KemyFurniture
             clonedKeeper.transform.localPosition = keeperPos;
             clonedKeeper.transform.localRotation = keeperRot;
 
+            // Clean template items out of cloned keeper hierarchy
             for (int i = clonedKeeper.transform.childCount - 1; i >= 0; i--)
             {
                 Transform child = clonedKeeper.transform.GetChild(i);
@@ -398,6 +460,7 @@ namespace KemyFurniture
 
             Shopkeeper shopkeeper = clonedKeeper.GetComponent<Shopkeeper>();
 
+            // Link Keeper to Custom ShopArea
             if (shopkeeper != null && shopArea != null)
             {
                 AccessTools.Field(typeof(Shopkeeper), "shopLocalPos")?.SetValue(shopkeeper, stallPos);
@@ -438,5 +501,65 @@ namespace KemyFurniture
             spawner.itemPrefab = prefab;
             spawner.priceMult = 1f;
         }
+
+        // =========================================================================
+        // VISUALIZER TOGGLE & ATTACHMENT HELPERS
+        // =========================================================================
+        public static void ToggleAllVisualizers(bool enabled)
+        {
+            var visualizers = GameObject.FindObjectsOfType<GameObject>()
+                .Where(go => go.name == "DEBUG_ShopArea_Visualizer");
+
+            foreach (var v in visualizers)
+            {
+                var renderer = v.GetComponent<MeshRenderer>();
+                if (renderer != null)
+                {
+                    renderer.enabled = enabled;
+                }
+            }
+        }
+
+        private static void AttachShopAreaVisualizer(ShopArea shopArea, Vector3 size)
+        {
+            if (shopArea == null) return;
+
+            Transform existing = shopArea.transform.Find("DEBUG_ShopArea_Visualizer");
+            if (existing != null)
+            {
+                UnityEngine.Object.Destroy(existing.gameObject);
+            }
+
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "DEBUG_ShopArea_Visualizer";
+            cube.transform.SetParent(shopArea.transform, false);
+
+            cube.transform.localPosition = new Vector3(0f, 0f, size.z * 0.5f);
+            cube.transform.localRotation = Quaternion.identity;
+            cube.transform.localScale = size;
+
+            var col = cube.GetComponent<Collider>();
+            if (col != null) UnityEngine.Object.Destroy(col);
+
+            var renderer = cube.GetComponent<MeshRenderer>();
+            if (renderer != null)
+            {
+                Material mat = new Material(Shader.Find("Standard"));
+                mat.SetFloat("_Mode", 3f); // Transparent
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                mat.SetInt("_ZWrite", 0);
+                mat.DisableKeyword("_ALPHATEST_ON");
+                mat.EnableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.renderQueue = 3000;
+                mat.color = new Color(0.0f, 1.0f, 0.0f, 0.35f);
+                renderer.material = mat;
+
+                renderer.enabled = FurniturePlugin.ShowShopBounds != null && FurniturePlugin.ShowShopBounds.Value;
+            }
+        }
     }
+
+    public class CoroutineRunner : MonoBehaviour { }
 }

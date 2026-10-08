@@ -28,12 +28,25 @@ namespace KemyFurniture.Core
 
             ApplyFogTest(prefab);
 
-            string name = prefab.name.ToLower();
+            string name = prefab.name.ToLower().Replace(" ", "").Replace("_", "");
             var shipItem = prefab.GetComponent<ShipItem>() ?? prefab.AddComponent<ShipItem>();
 
             SanitizeRootColliders(prefab);
 
-            // 1. Captain's Desk
+            // =====================================================================
+            // 1. ASSIGN PREFAB SAVE INDICES (450 - 480 MASTER REGISTRY)
+            // =====================================================================
+            int assignedId = ResolveMasterId(name);
+            if (assignedId > 0)
+            {
+                RegisterSaveIndex(prefab, assignedId);
+            }
+
+            // =====================================================================
+            // 2. CONFIGURE BEHAVIOURS, NAMES, AND PRICES
+            // =====================================================================
+
+            // Captain's Desk (466)
             if (name.Contains("captaindesk") || name.Contains("captainsdesk"))
             {
                 EnsureCrateComponents(prefab);
@@ -45,7 +58,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 750);
             }
-            // 2. Small Cabinet
+            // Small Cabinets (458, 462, 470)
             else if (name.Contains("cabinetsmall"))
             {
                 EnsureCrateComponents(prefab);
@@ -57,7 +70,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 480);
             }
-            // 3. Wide Cabinet
+            // Wide Cabinets (459, 461, 471)
             else if (name.Contains("cabinetwide"))
             {
                 EnsureCrateComponents(prefab);
@@ -69,7 +82,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 720);
             }
-            // 4. Large Cabinet
+            // Large Cabinets (455, 460, 469)
             else if (name.Contains("cabinet"))
             {
                 EnsureCrateComponents(prefab);
@@ -81,7 +94,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 1200);
             }
-            // 5. Chest
+            // Chests (452, 463, 472)
             else if (name.Contains("chest") || name.Contains("seachest"))
             {
                 EnsureCrateComponents(prefab);
@@ -93,7 +106,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 800);
             }
-            // 6. Scroll Shelf
+            // Scroll Shelves (451, 465, 474)
             else if (name.Contains("scroll") || name.Contains("shelf"))
             {
                 EnsureCrateComponents(prefab);
@@ -105,7 +118,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 450);
             }
-            // 7. Carpets
+            // Carpets (454, 456, 457)
             else if (name.Contains("carpet"))
             {
                 string cleanName = "Red Carpet";
@@ -121,8 +134,8 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 400);
             }
-            // 8. Navigator's Desk
-            else if (name.Contains("navigatordesk") || name.Contains("navigatortable") || name.Contains("table"))
+            // Navigator's Desks (450, 467, 468, 475)
+            else if (name.Contains("navigatordesk") || name.Contains("navigatortable") || name.Contains("navtable") || name.Contains("table"))
             {
                 shipItem.name = "Navigator's Desk";
                 shipItem.lookText = "Navigator's Desk";
@@ -133,7 +146,7 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 650);
             }
-            // 9. Bed
+            // Beds (453, 464, 473)
             else if (name.Contains("bed"))
             {
                 shipItem.name = "Bed";
@@ -145,6 +158,74 @@ namespace KemyFurniture.Core
                 }
                 SetItemValue(prefab, 950);
             }
+            // Cushions (479, 480)
+            else if (name.Contains("cushion"))
+            {
+                string cName = name.Contains("white") ? "White Cushion" : "Red Cushion";
+                shipItem.name = cName;
+                shipItem.lookText = cName;
+                SetItemValue(prefab, 400);
+            }
+            // Chair EA (478)
+            else if (name.Contains("chairea") || name.Contains("chair"))
+            {
+                shipItem.name = "Chair";
+                shipItem.lookText = "Chair";
+                SetItemValue(prefab, 480);
+            }
+            // Room Divider (477)
+            else if (name.Contains("divider"))
+            {
+                shipItem.name = "Room Divider";
+                shipItem.lookText = "Room Divider";
+                SetItemValue(prefab, 480);
+            }
+        }
+
+        private static int ResolveMasterId(string cleanName)
+        {
+            // Baseline 450 - 459
+            if (cleanName == "navigatortable" || cleanName == "navtable") return 450;
+            if (cleanName == "scrollshelf") return 451;
+            if (cleanName == "seachest") return 452;
+            if (cleanName == "bed") return 453;
+            if (cleanName == "carpet" || cleanName == "carpetred") return 454;
+            if (cleanName == "cabinet") return 455;
+            if (cleanName == "carpetblue") return 456;
+            if (cleanName == "carpetgreen") return 457;
+            if (cleanName == "cabinetsmall") return 458;
+            if (cleanName == "cabinetwide") return 459;
+
+            // Al'Ankh 460 - 465
+            if (cleanName == "cabinetalankh" || cleanName == "cabinetaa") return 460;
+            if (cleanName == "cabinetwidealankh" || cleanName == "cabinetwideaa") return 461;
+            if (cleanName == "cabinetsmallalankh" || cleanName == "cabinetsmallaa") return 462;
+            if (cleanName == "chestalankh" || cleanName == "chestaa") return 463;
+            if (cleanName == "bedalankh" || cleanName == "bedaa") return 464;
+            if (cleanName == "scrollshelfalankh" || cleanName == "scrollshelfaa") return 465;
+
+            // Aestrin & Desks 466 - 468
+            if (cleanName == "captainsdesk" || cleanName == "captaindesk") return 466;
+            if (cleanName == "navigatordesk" || cleanName == "navdesk") return 467;
+            if (cleanName == "navigatordeskalankh" || cleanName == "navdeskaa") return 468;
+
+            // Emerald Archipelago 469 - 475
+            if (cleanName == "cabinetea") return 469;
+            if (cleanName == "cabinetsmallea") return 470;
+            if (cleanName == "cabinetwideea") return 471;
+            if (cleanName == "chestea") return 472;
+            if (cleanName == "bedea") return 473;
+            if (cleanName == "scrollshelfea") return 474;
+            if (cleanName == "navigatordeskea" || cleanName == "navdeskea") return 475;
+
+            // 476 Open Buffer
+            // New Batch 477 - 480
+            if (cleanName == "divider") return 477;
+            if (cleanName == "chairea") return 478;
+            if (cleanName == "cushionred") return 479;
+            if (cleanName == "cushionwhite") return 480;
+
+            return -1;
         }
 
         private static void ApplyFogTest(GameObject go)

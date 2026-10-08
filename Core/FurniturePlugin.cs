@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
@@ -14,15 +15,32 @@ namespace KemyFurniture
     {
         public const string PLUGIN_GUID = "com.kemy.kemyfurniture";
         public const string PLUGIN_NAME = "Kemy's Furniture";
-        public const string PLUGIN_VERSION = "1.4.0";
+        public const string PLUGIN_VERSION = "1.5.0";
 
         public static AssetBundle MainAssetBundle { get; private set; }
         public static GameObject[] LoadedPrefabs { get; private set; }
         public static ManualLogSource DiagLogger { get; private set; }
 
+        // Configuration Manager entry
+        public static ConfigEntry<bool> ShowShopBounds { get; private set; }
+
         private void Awake()
         {
             DiagLogger = Logger;
+
+            // Register configuration entry for Configuration Manager
+            ShowShopBounds = Config.Bind(
+                "Debug & Diagnostics",
+                "ShowShopBounds",
+                false,
+                "Visualise shop interaction trigger boxes as semi-transparent green volumes in-game."
+            );
+
+            // Hook setting changes so toggling in Configuration Manager updates active scenes immediately
+            ShowShopBounds.SettingChanged += (sender, args) =>
+            {
+                ShopStallInjection.ToggleAllVisualizers(ShowShopBounds.Value);
+            };
 
             // 1. Load AssetBundle
             string modDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -51,6 +69,9 @@ namespace KemyFurniture
                 }
                 DiagLogger.LogInfo("[KEMY FURNITURE] Prefabs configured and shaders rebound to native Standard.");
             }
+
+            // Direct directory injection
+            ForceDirectDirectoryInjection();
 
             // 3. Apply Harmony patches
             try
